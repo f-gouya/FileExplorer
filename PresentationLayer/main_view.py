@@ -1,5 +1,5 @@
 from PresentationLayer.windows import Windows
-# from PresentationLayer.home import HomeFrame
+from PresentationLayer.home import HomeFrame
 
 
 class MainView:
