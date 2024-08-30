@@ -1,4 +1,4 @@
-from ttkbootstrap import Frame, Menubutton, Menu, Treeview, Scrollbar, PanedWindow
+from ttkbootstrap import Frame, Menubutton, Menu, Treeview, Scrollbar, PanedWindow, Label
 from pathlib import Path
 
 
@@ -57,8 +57,12 @@ class Home(Frame):
         self.file_scrollbar.grid(row=0, column=1, sticky="ns")
         self.file_tree.config(yscrollcommand=self.file_scrollbar.set)
 
+        # Create a status bar
         self.status_bar = Frame(self)
         self.status_bar.grid(row=2, column=0, sticky="ew")
+
+        self.status_label = Label(self.status_bar, text="Status: Ready")
+        self.status_label.grid(row=0, column=0, padx=10, pady=5)
 
         # Populate the folder tree
         self.populate_folders()
@@ -66,6 +70,7 @@ class Home(Frame):
         # Bind the folder tree selection event
         self.folder_tree.bind("<<TreeviewOpen>>", self.on_folder_expand)
         self.folder_tree.bind("<<TreeviewSelect>>", self.on_folder_select)
+        self.file_tree.bind("<<TreeviewSelect>>", self.update_status_bar)
 
     def change_theme(self, theme_name):
         self.main_view.window.set_theme(theme_name)
@@ -110,6 +115,49 @@ class Home(Frame):
                 self.file_tree.insert("", "end", text=item.name)
         except PermissionError:
             pass
+
+        # Update the status bar
+        self.update_status_bar()
+
+    def update_status_bar(self, _=None):
+        # Get all items in the file tree
+        all_items = self.file_tree.get_children()
+        total_items = len(all_items)
+
+        # Get selected items
+        selected_items = self.file_tree.selection()
+        selected_count = len(selected_items)
+
+        # Calculate total size if only files are selected
+        total_size = 0
+        all_files = True
+        for item in selected_items:
+            item_text = self.file_tree.item(item, "text")
+            item_path = Path(self.get_full_path(self.folder_tree.selection()[0])) / item_text
+            if item_path.is_file():
+                total_size += item_path.stat().st_size
+            else:
+                all_files = False
+
+        # Format total size
+        if total_size < 1024:
+            size_str = f"{total_size} B"
+        elif total_size < 1024 ** 2:
+            size_str = f"{total_size / 1024:.2f} KB"
+        elif total_size < 1024 ** 3:
+            size_str = f"{total_size / 1024 ** 2:.2f} MB"
+        else:
+            size_str = f"{total_size / 1024 ** 3:.2f} GB"
+
+        # Update status label
+        if selected_count == 0:
+            status_text = f"{total_items} items"
+        elif all_files:
+            status_text = f"{total_items} items | {selected_count} items selected ({size_str})"
+        else:
+            status_text = f"{total_items} items | {selected_count} items selected"
+
+        self.status_label.config(text=status_text)
 
     def get_full_path(self, item):
         path = []
