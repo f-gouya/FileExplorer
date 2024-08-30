@@ -1,5 +1,7 @@
 from ttkbootstrap import Frame, Menubutton, Menu, Treeview, Scrollbar, PanedWindow, Label
 from pathlib import Path
+import psutil
+import time
 
 
 class Home(Frame):
@@ -50,8 +52,21 @@ class Home(Frame):
         self.right_pane.grid_columnconfigure(0, weight=1)
         self.right_pane.grid_rowconfigure(0, weight=1)
 
-        self.file_tree = Treeview(self.right_pane)
+        self.file_tree = Treeview(self.right_pane, columns=("Name", "Date Modified", "Date Created", "Type", "Size"),
+                                  show="headings", selectmode='extended')
         self.file_tree.grid(row=0, column=0, sticky="nsew")
+
+        self.file_tree.heading("Name", text="Name", anchor="w")
+        self.file_tree.heading("Date Modified", text="Date Modified", anchor="w")
+        self.file_tree.heading("Date Created", text="Date Created", anchor="w")
+        self.file_tree.heading("Type", text="Type", anchor="w")
+        self.file_tree.heading("Size", text="Size", anchor="w")
+
+        self.file_tree.column("Name", width=200)
+        self.file_tree.column("Date Modified", width=150)
+        self.file_tree.column("Date Created", width=150)
+        self.file_tree.column("Type", width=100)
+        self.file_tree.column("Size", width=100)
 
         self.file_scrollbar = Scrollbar(self.right_pane, orient='vertical', command=self.file_tree.yview)
         self.file_scrollbar.grid(row=0, column=1, sticky="ns")
@@ -76,9 +91,16 @@ class Home(Frame):
         self.main_view.window.set_theme(theme_name)
 
     def populate_folders(self):
-        # Populate the folder tree with directories
-        root_node = self.folder_tree.insert("", "end", text="C:\\", open=True)
-        self.insert_subfolders(root_node, Path("C:\\"))
+        # Create "This PC" node
+        this_pc_node = self.folder_tree.insert("", "end", text="This PC", open=True)
+
+        # Get all drives
+        drives = [disk.device for disk in psutil.disk_partitions()]
+
+        # Populate the folder tree with drives
+        for drive in drives:
+            drive_node = self.folder_tree.insert(this_pc_node, "end", text=drive, open=False)
+            self.insert_subfolders(drive_node, Path(drive))
 
     def insert_subfolders(self, parent, path):
         try:
@@ -95,6 +117,10 @@ class Home(Frame):
         selected_item = self.folder_tree.selection()[0]
         folder_path = self.get_full_path(selected_item)
 
+        # Check if the selected item is "This PC"
+        if folder_path == "This PC":
+            return
+
         # Clear the dummy child
         self.folder_tree.delete(*self.folder_tree.get_children(selected_item))
 
@@ -106,13 +132,21 @@ class Home(Frame):
         selected_item = self.folder_tree.selection()[0]
         folder_path = self.get_full_path(selected_item)
 
+        # Check if the selected item is "This PC"
+        if folder_path == "This PC":
+            return
+
         # Clear the file tree
         self.file_tree.delete(*self.file_tree.get_children())
 
         # Populate the file tree with files and folders in the selected folder
         try:
             for item in Path(folder_path).iterdir():
-                self.file_tree.insert("", "end", text=item.name)
+                item_type = "Folder" if item.is_dir() else item.suffix
+                item_size = self.format_size(item.stat().st_size) if item.is_file() else ""
+                date_modified = time.strftime("%d/%m/%Y %I:%M %p", time.localtime(item.stat().st_mtime))
+                date_created = time.strftime("%d/%m/%Y %I:%M %p", time.localtime(item.stat().st_ctime))
+                self.file_tree.insert("", "end", values=(item.name, date_modified, date_created, item_type, item_size))
         except PermissionError:
             pass
 
@@ -132,22 +166,15 @@ class Home(Frame):
         total_size = 0
         all_files = True
         for item in selected_items:
-            item_text = self.file_tree.item(item, "text")
-            item_path = Path(self.get_full_path(self.folder_tree.selection()[0])) / item_text
+            item_values = self.file_tree.item(item, "values")
+            item_path = Path(self.get_full_path(self.folder_tree.selection()[0])) / item_values[0]
             if item_path.is_file():
                 total_size += item_path.stat().st_size
             else:
                 all_files = False
 
         # Format total size
-        if total_size < 1024:
-            size_str = f"{total_size} B"
-        elif total_size < 1024 ** 2:
-            size_str = f"{total_size / 1024:.2f} KB"
-        elif total_size < 1024 ** 3:
-            size_str = f"{total_size / 1024 ** 2:.2f} MB"
-        else:
-            size_str = f"{total_size / 1024 ** 3:.2f} GB"
+        size_str = self.format_size(total_size)
 
         # Update status label
         if selected_count == 0:
@@ -159,9 +186,20 @@ class Home(Frame):
 
         self.status_label.config(text=status_text)
 
+    @staticmethod
+    def format_size(size):
+        if size < 1024:
+            return f"{size} B"
+        elif size < 1024 ** 2:
+            return f"{size / 1024:.2f} KB"
+        elif size < 1024 ** 3:
+            return f"{size / 1024 ** 2:.2f} MB"
+        else:
+            return f"{size / 1024 ** 3:.2f} GB"
+
     def get_full_path(self, item):
         path = []
         while item:
             path.insert(0, self.folder_tree.item(item, "text"))
             item = self.folder_tree.parent(item)
-        return Path("C:\\").joinpath(*path)
+        return Path(*path)
