@@ -1,7 +1,7 @@
-from ttkbootstrap import Frame, Menubutton, Menu, Treeview, Scrollbar, PanedWindow, Label
+from ttkbootstrap import Frame, Menubutton, Menu, Treeview, Scrollbar, PanedWindow, Label, Button
 from pathlib import Path
-import psutil
 import time
+import psutil
 
 
 class Home(Frame):
@@ -26,6 +26,15 @@ class Home(Frame):
         for theme in themes:
             self.theme_menu.add_command(label=theme.capitalize(),
                                         command=lambda select=theme: self.change_theme(select))
+
+        self.create_folder_button = Button(self.menu_bar, text="Create", width=10)
+        self.create_folder_button.grid(row=0, column=1, padx=(5, 0))
+
+        self.rename_items_button = Button(self.menu_bar, text="Rename", width=10)
+        self.rename_items_button.grid(row=0, column=3, padx=(5, 0))
+
+        self.delete_items_button = Button(self.menu_bar, text="Delete", width=10)
+        self.delete_items_button.grid(row=0, column=4, padx=(5, 0))
 
         # Create a PanedWindow for the file explorer
         self.paned_window = PanedWindow(self, orient='horizontal')
@@ -117,10 +126,6 @@ class Home(Frame):
         selected_item = self.folder_tree.selection()[0]
         folder_path = self.get_full_path(selected_item)
 
-        # Check if the selected item is "This PC"
-        if folder_path == "This PC":
-            return
-
         # Clear the dummy child
         self.folder_tree.delete(*self.folder_tree.get_children(selected_item))
 
@@ -132,10 +137,6 @@ class Home(Frame):
         selected_item = self.folder_tree.selection()[0]
         folder_path = self.get_full_path(selected_item)
 
-        # Check if the selected item is "This PC"
-        if folder_path == "This PC":
-            return
-
         # Clear the file tree
         self.file_tree.delete(*self.file_tree.get_children())
 
@@ -144,8 +145,8 @@ class Home(Frame):
             for item in Path(folder_path).iterdir():
                 item_type = "Folder" if item.is_dir() else item.suffix
                 item_size = self.format_size(item.stat().st_size) if item.is_file() else ""
-                date_modified = time.strftime("%d/%m/%Y %I:%M %p", time.localtime(item.stat().st_mtime))
-                date_created = time.strftime("%d/%m/%Y %I:%M %p", time.localtime(item.stat().st_ctime))
+                date_modified = time.strftime("%d,%m,%Y %I:%M %p", time.localtime(item.stat().st_mtime))
+                date_created = time.strftime("%d,%m,%Y %I:%M %p", time.localtime(item.stat().st_ctime))
                 self.file_tree.insert("", "end", values=(item.name, date_modified, date_created, item_type, item_size))
         except PermissionError:
             pass
@@ -202,4 +203,4 @@ class Home(Frame):
         while item:
             path.insert(0, self.folder_tree.item(item, "text"))
             item = self.folder_tree.parent(item)
-        return Path(*path)
+        return Path("C:\\").joinpath(*path)
