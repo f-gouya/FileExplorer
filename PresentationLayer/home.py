@@ -484,13 +484,6 @@ class Home(Frame):
                     zf.extractall(path=extract_path, pwd=password.encode('utf-8'))  # Extract with the password
                 else:
                     zf.extractall(path=extract_path)  # Extract without a password
-            # with zipfile.ZipFile(zip_file_path, mode="r") as zf:
-            #     # Check if the zip file is encrypted
-            #     if zf.pwd:
-            #         password = Querybox.get_string("Enter the zip file password (if encrypted):", "Zip Password")
-            #         zf.extractall(path=extract_path, pwd=password.encode('utf-8'))  # Extract with the password
-            #     else:
-            #         zf.extractall(path=extract_path)  # Extract without a password
 
             Messagebox.show_info(f"Files successfully extracted to {extract_path}", "Success")
 
