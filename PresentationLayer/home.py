@@ -2,7 +2,6 @@ from ttkbootstrap import Frame, Menubutton, Menu, Treeview, Scrollbar, PanedWind
 from ttkbootstrap.dialogs import Messagebox, Querybox
 from pathlib import Path
 import pyzipper
-import zipfile
 import psutil
 import time
 
