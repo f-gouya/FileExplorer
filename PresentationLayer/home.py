@@ -478,12 +478,15 @@ class Home(Frame):
             extract_path.mkdir(exist_ok=True)  # Create directory
 
             with pyzipper.AESZipFile(zip_file_path) as zf:
-                # Check if the zip file is encrypted
-                if zf.is_encrypted:
-                    password = Querybox.get_string("Enter the zip file password (if encrypted):", "Zip Password")
-                    zf.extractall(path=extract_path, pwd=password.encode('utf-8'))  # Extract with the password
-                else:
-                    zf.extractall(path=extract_path)  # Extract without a password
+                try:
+                    # Attempt to extract without a password first
+                    zf.extractall(path=extract_path)
+                except RuntimeError:
+                    # If extraction fails, prompt for a password
+                    password = Querybox.get_string("Enter the zip file password:", "Zip Password")
+                    if password:
+                        zf.setpassword(password.encode('utf-8'))
+                        zf.extractall(path=extract_path)
 
             Messagebox.show_info(f"Files successfully extracted to {extract_path}", "Success")
 
