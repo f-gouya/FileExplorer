@@ -404,13 +404,13 @@ class Home(Frame):
 
     def zip_files(self):
         # Get selected items from the tree view
-        selected_items = [self.file_tree.item(item)['values'][0] for item in self.file_tree.selection()]
+        selected_items = [item for item in self.file_tree.selection()]
 
         if not selected_items:
             Messagebox.show_warning("Please select files or directories to zip.", "No Selection")
             return
 
-            # Get the full path of the first selected item's parent directory
+        # Get the full path of the first selected item's parent directory
         parent_directory = Path(self.file_tree.selection()[0]).parent
 
         # Ask for the zip file name
@@ -425,11 +425,28 @@ class Home(Frame):
             # Create the zip file in the same directory where the selected items are located
             zip_file_path = parent_directory / f"{zip_name}.zip"
 
-            with pyzipper.AESZipFile(zip_file_path, 'w', compression=zipfile.ZIP_DEFLATED) as zf:
-                for item in selected_items:
-                    zf.write(item, arcname=Path(item).name)  # Write the files to the zip
-                if password:
+            if password:
+                with pyzipper.AESZipFile(zip_file_path, 'w', compression=pyzipper.ZIP_DEFLATED,
+                                         encryption=pyzipper.WZ_AES) as zf:
                     zf.setpassword(password.encode('utf-8'))  # Set password if provided
+                    for item in selected_items:
+                        item_path = Path(item)
+                        if item_path.is_dir():
+                            for file_path in item_path.rglob('*'):
+                                if file_path.is_file():
+                                    zf.write(file_path, arcname=file_path.relative_to(parent_directory))
+                        else:
+                            zf.write(item_path, arcname=item_path.name)  # Write the files to the zip
+            else:
+                with pyzipper.AESZipFile(zip_file_path, 'w', compression=pyzipper.ZIP_DEFLATED) as zf:
+                    for item in selected_items:
+                        item_path = Path(item)
+                        if item_path.is_dir():
+                            for file_path in item_path.rglob('*'):
+                                if file_path.is_file():
+                                    zf.write(file_path, arcname=file_path.relative_to(parent_directory))
+                        else:
+                            zf.write(item_path, arcname=item_path.name)  # Write the files to the zip
 
             Messagebox.show_info(f"Files successfully zipped to {zip_file_path.name}", "Success")
 
@@ -459,7 +476,6 @@ class Home(Frame):
         try:
             # Create the extraction directory within the parent directory
             extract_path = parent_directory / extract_dir_name
-            print(extract_path)
             extract_path.mkdir(exist_ok=True)  # Create directory
 
             with pyzipper.AESZipFile(zip_file_path) as zf:
