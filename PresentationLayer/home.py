@@ -3,6 +3,7 @@ from ttkbootstrap.dialogs import Messagebox, Querybox
 from pathlib import Path
 import pyzipper
 import psutil
+import shutil
 import time
 
 
@@ -310,7 +311,7 @@ class Home(Frame):
             Messagebox.show_error("Please select at least one file or directory to delete.", "Selection Error")
             return
 
-            # Confirmation dialog
+        # Confirmation dialog
         confirm = Messagebox.yesno("Are you sure you want to delete the selected items?", "Confirm Deletion")
         if not confirm:
             return  # User chose not to delete
@@ -322,7 +323,7 @@ class Home(Frame):
 
             try:
                 if item_path.is_dir():
-                    item_path.rmdir()  # Remove directory (must be empty)
+                    shutil.rmtree(item_path)  # Remove directory and all its contents
                 else:
                     item_path.unlink()  # Remove file
             except FileNotFoundError:
@@ -334,7 +335,7 @@ class Home(Frame):
             except Exception as e:
                 Messagebox.show_error(f"An unexpected error occurred: {str(e)}", "Error")
 
-                # Refresh the right pane to show the updated items
+        # Refresh the right pane to show the updated items
         self.on_folder_select(None)
 
     def on_folder_selection_change(self, _):
