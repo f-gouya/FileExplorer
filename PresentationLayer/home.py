@@ -14,7 +14,7 @@ class Home(Frame):
         self.grid_rowconfigure(1, weight=1)
 
         self.menu_bar = Frame(self)
-        self.menu_bar.grid(row=0, column=0, sticky="ew")
+        self.menu_bar.grid(row=0, column=0, pady=(1, 0), sticky="ew")
 
         self.theme_button = Menubutton(self.menu_bar, text="Themes")
         self.theme_button.grid(row=0, column=0)
@@ -28,17 +28,17 @@ class Home(Frame):
                                         command=lambda select=theme: self.change_theme(select))
 
         self.create_folder_button = Button(self.menu_bar, text="Create", width=10)
-        self.create_folder_button.grid(row=0, column=1, padx=(5, 0))
+        self.create_folder_button.grid(row=0, column=1, padx=(1, 0))
 
         self.rename_items_button = Button(self.menu_bar, text="Rename", width=10)
-        self.rename_items_button.grid(row=0, column=3, padx=(5, 0))
+        self.rename_items_button.grid(row=0, column=3, padx=(1, 0))
 
         self.delete_items_button = Button(self.menu_bar, text="Delete", width=10)
-        self.delete_items_button.grid(row=0, column=4, padx=(5, 0))
+        self.delete_items_button.grid(row=0, column=4, padx=(1, 0))
 
         # Create a PanedWindow for the file explorer
         self.paned_window = PanedWindow(self, orient='horizontal')
-        self.paned_window.grid(row=1, column=0, sticky="nsew")
+        self.paned_window.grid(row=1, column=0, pady=1, sticky="nsew")
 
         # Left pane for folder hierarchy
         self.left_pane = Frame(self.paned_window)
@@ -145,8 +145,8 @@ class Home(Frame):
             for item in Path(folder_path).iterdir():
                 item_type = "Folder" if item.is_dir() else item.suffix
                 item_size = self.format_size(item.stat().st_size) if item.is_file() else ""
-                date_modified = time.strftime("%d,%m,%Y %I:%M %p", time.localtime(item.stat().st_mtime))
-                date_created = time.strftime("%d,%m,%Y %I:%M %p", time.localtime(item.stat().st_ctime))
+                date_modified = time.strftime("%d/%m/%Y %I:%M %p", time.localtime(item.stat().st_mtime))
+                date_created = time.strftime("%d/%m/%Y %I:%M %p", time.localtime(item.stat().st_ctime))
                 self.file_tree.insert("", "end", values=(item.name, date_modified, date_created, item_type, item_size))
         except PermissionError:
             pass
