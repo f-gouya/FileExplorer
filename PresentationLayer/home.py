@@ -19,7 +19,7 @@ class Home(Frame):
         self.menu_bar = Frame(self)
         self.menu_bar.grid(row=0, column=0, pady=(1, 0), sticky="ew")
 
-        self.menu_bar.grid_columnconfigure(8, weight=1)
+        self.menu_bar.grid_columnconfigure(9, weight=1)
 
         self.theme_button = Menubutton(self.menu_bar, text="Themes")
         self.theme_button.grid(row=0, column=0)
@@ -47,11 +47,14 @@ class Home(Frame):
         self.extract_button = Button(self.menu_bar, text="Extract", width=11, command=self.extract_zip)
         self.extract_button.grid(row=0, column=6, padx=(1, 0))
 
+        self.refresh_button = Button(self.menu_bar, text="Refresh", width=11, command=self.refresh_page)
+        self.refresh_button.grid(row=0, column=7, padx=(1, 0))
+
         self.search_label = Label(self.menu_bar, text="Search")
-        self.search_label.grid(row=0, column=7, padx=(20, 0))
+        self.search_label.grid(row=0, column=8, padx=(20, 0))
 
         self.search_entry = Entry(self.menu_bar)
-        self.search_entry.grid(row=0, column=8, padx=5, sticky="ew")
+        self.search_entry.grid(row=0, column=9, padx=5, sticky="ew")
         self.search_entry.bind("<KeyRelease>", self.search)
 
         # Create a PanedWindow for the file explorer
@@ -496,3 +499,7 @@ class Home(Frame):
 
         # Refresh the right pane to show the updated items
         self.on_folder_select(None)
+
+    def refresh_page(self):
+        if self.folder_tree.selection():
+            self.on_folder_select(None)
