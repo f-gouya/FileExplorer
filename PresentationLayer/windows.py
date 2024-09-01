@@ -5,7 +5,7 @@ class Windows(Window):
     def __init__(self):
         super().__init__(themename="flatly")
 
-        self.title("Task Manager Application")
+        self.title("File Explorer")
 
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
